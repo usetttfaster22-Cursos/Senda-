@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    container_name: senda-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: "3000"
+    # Solo accesible desde el propio servidor; Nginx lo publica con HTTPS.
+    ports:
+      - "127.0.0.1:8110:3000"
