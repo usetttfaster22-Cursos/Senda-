@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 
+import { apiFetch } from '@/lib/api';
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -21,20 +23,10 @@ export default function ChatScreen() {
     setInputText('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/chat/nova', {
+      const data = await apiFetch<{ role: Message['role']; content: string }>('/api/chat/nova', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userId: 'test-user',
-          message: newUserMessage.content
-        })
+        body: JSON.stringify({ message: newUserMessage.content })
       });
-
-      if (!response.ok) throw new Error('Network response was not ok');
-      
-      const data = await response.json();
       setMessages((prev) => [...prev, { id: Date.now().toString(), role: data.role, content: data.content }]);
     } catch (error) {
       console.error(error);

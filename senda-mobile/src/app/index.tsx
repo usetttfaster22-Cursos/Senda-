@@ -2,6 +2,9 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Ale
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
+import { apiFetch } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+
 export default function HomeScreen() {
   const router = useRouter();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
@@ -14,10 +17,19 @@ export default function HomeScreen() {
     );
   };
 
-  const submitMood = (moodValue: number) => {
+  const submitMood = async (moodValue: number) => {
     setSelectedMood(moodValue);
-    // TODO: Enviar al backend
-    Alert.alert("Registro guardado", "Gracias por registrar cómo te sientes hoy.");
+    try {
+      await apiFetch('/api/mood', {
+        method: 'POST',
+        body: JSON.stringify({ score: moodValue, emotions: [] })
+      });
+      Alert.alert("Registro guardado", "Gracias por registrar cómo te sientes hoy.");
+    } catch (error) {
+      console.error(error);
+      setSelectedMood(null);
+      Alert.alert("No se pudo guardar", "Revisa tu conexión e inténtalo de nuevo.");
+    }
   };
 
   return (
@@ -88,6 +100,10 @@ export default function HomeScreen() {
             <Text style={styles.habitText}>Beber agua</Text>
           </View>
         </View>
+
+        <TouchableOpacity onPress={() => supabase.auth.signOut()}>
+          <Text style={styles.signOutText}>Cerrar sesión</Text>
+        </TouchableOpacity>
 
       </ScrollView>
     </SafeAreaView>
@@ -161,5 +177,6 @@ const styles = StyleSheet.create({
     borderColor: '#9C88FF', // Acento lavanda
     marginRight: 12
   },
-  habitText: { fontSize: 16, color: '#333' }
+  habitText: { fontSize: 16, color: '#333' },
+  signOutText: { color: '#999', textAlign: 'center', fontSize: 13, marginTop: 30, marginBottom: 10 }
 });

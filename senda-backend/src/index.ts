@@ -1,15 +1,15 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
 import OpenAI from 'openai';
 import { NOVA_SYSTEM_PROMPT } from './prompts';
-
-dotenv.config();
+import { requireAuth } from './auth';
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
+const auth = requireAuth(prisma);
 
 app.use(cors());
 app.use(express.json());
@@ -21,15 +21,19 @@ app.get('/health', (req, res) => {
 
 // --- Endpoints de Diario y Ánimo (Ejemplos) ---
 
-app.post('/api/mood', async (req, res) => {
+app.post('/api/mood', auth, async (req, res) => {
   try {
-    const { userId, score, emotions, notes } = req.body;
+    const { score, emotions, notes } = req.body;
+    if (!Number.isInteger(score) || score < 1 || score > 5) {
+      return res.status(400).json({ error: 'score debe ser un entero entre 1 y 5' });
+    }
+
     const newEntry = await prisma.moodEntry.create({
       data: {
-        userId,
+        userId: req.user!.id,
         score,
-        emotions,
-        notes
+        emotions: Array.isArray(emotions) ? emotions.map(String) : [],
+        notes: typeof notes === 'string' ? notes : null
       }
     });
     res.status(201).json(newEntry);
@@ -39,11 +43,10 @@ app.post('/api/mood', async (req, res) => {
   }
 });
 
-app.get('/api/mood/:userId', async (req, res) => {
+app.get('/api/mood', auth, async (req, res) => {
   try {
-    const { userId } = req.params;
     const entries = await prisma.moodEntry.findMany({
-      where: { userId },
+      where: { userId: req.user!.id },
       orderBy: { createdAt: 'desc' }
     });
     res.json(entries);
@@ -54,9 +57,12 @@ app.get('/api/mood/:userId', async (req, res) => {
 
 // --- Integración Mock de NOVA (IA) ---
 
-app.post('/api/chat/nova', async (req, res) => {
+app.post('/api/chat/nova', auth, async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { message } = req.body;
+    if (typeof message !== 'string' || message.trim() === '') {
+      return res.status(400).json({ error: 'message es obligatorio' });
+    }
     
     // Filtro de crisis básico
     const crisisKeywords = ['suicidio', 'matarme', 'morir', 'daño', 'abuso'];

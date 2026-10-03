@@ -5,7 +5,7 @@ API de Senda (Express + Prisma + PostgreSQL en Supabase).
 ## Puesta en marcha
 
 1. `npm install`
-2. Copia `.env.example` a `.env` y completa `DATABASE_URL`, `DIRECT_URL` y (opcional) `OPENAI_API_KEY`.
+2. Copia `.env.example` a `.env` y completa `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` y (opcional) `OPENAI_API_KEY`.
 3. Crea las tablas: `npm run db:migrate`
    - Si ya ejecutaste `prisma/migrations/20261003000000_init/migration.sql` a mano en el SQL Editor de Supabase,
      márcala como aplicada: `npx prisma migrate resolve --applied 20261003000000_init`
