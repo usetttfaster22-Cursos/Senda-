@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import OpenAI from 'openai';
+import { NOVA_SYSTEM_PROMPT } from './prompts';
 
 dotenv.config();
 
@@ -51,11 +53,6 @@ app.get('/api/mood/:userId', async (req, res) => {
 });
 
 // --- Integración Mock de NOVA (IA) ---
-
-import OpenAI from 'openai';
-import { NOVA_SYSTEM_PROMPT } from './prompts';
-
-// ... (El resto permanece igual hasta el endpoint de chat) ...
 
 app.post('/api/chat/nova', async (req, res) => {
   try {
