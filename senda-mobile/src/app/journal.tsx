@@ -1,26 +1,51 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+
+import { apiFetch } from '@/lib/api';
+
+const QUESTIONS: { key: keyof JournalData; label: string }[] = [
+  { key: 'emocion', label: '¿Qué siento ahora?' },
+  { key: 'contexto', label: '¿Qué ocurrió antes de sentirme así?' },
+  { key: 'pensamiento', label: '¿Qué pensamiento está ocupando más espacio?' },
+  { key: 'control', label: '¿Qué parte depende de mí?' },
+  { key: 'accion', label: 'Una acción pequeña para hoy' },
+  { key: 'gratitud', label: 'Tres cosas por las que siento gratitud' },
+];
+
+const EMPTY_JOURNAL = { emocion: '', contexto: '', pensamiento: '', control: '', accion: '', gratitud: '' };
+type JournalData = typeof EMPTY_JOURNAL;
 
 export default function JournalScreen() {
-  const [journalData, setJournalData] = useState({
-    emocion: '',
-    contexto: '',
-    pensamiento: '',
-    control: '',
-    accion: '',
-    gratitud: ''
-  });
+  const [journalData, setJournalData] = useState<JournalData>(EMPTY_JOURNAL);
+  const [saving, setSaving] = useState(false);
 
   const handleChange = (key: string, value: string) => {
     setJournalData({ ...journalData, [key]: value });
   };
 
-  const saveJournal = () => {
-    // TODO: Enviar al backend
-    Alert.alert(
-      "Diario guardado",
-      "Tus reflexiones han sido guardadas de forma segura y privada."
-    );
+  const saveJournal = async () => {
+    // Se guardan solo las preguntas respondidas, como texto con su pregunta.
+    const content = QUESTIONS
+      .filter(({ key }) => journalData[key].trim() !== '')
+      .map(({ key, label }) => `${label}\n${journalData[key].trim()}`)
+      .join('\n\n');
+
+    if (!content) {
+      Alert.alert("Diario vacío", "Responde al menos una pregunta antes de guardar.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await apiFetch('/api/journal', { method: 'POST', body: JSON.stringify({ content }) });
+      setJournalData(EMPTY_JOURNAL);
+      Alert.alert("Diario guardado", "Tus reflexiones han sido guardadas de forma segura y privada.");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("No se pudo guardar", "Revisa tu conexión e inténtalo de nuevo. Tu texto sigue aquí.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -95,8 +120,8 @@ export default function JournalScreen() {
           />
         </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={saveJournal}>
-          <Text style={styles.saveButtonText}>Guardar Reflexión</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={saveJournal} disabled={saving}>
+          {saving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Guardar Reflexión</Text>}
         </TouchableOpacity>
 
       </ScrollView>

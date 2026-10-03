@@ -2,20 +2,13 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Ale
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
+import { HelpButton } from '@/components/help-button';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
-
-  const handleHelpButton = () => {
-    Alert.alert(
-      "Centro de Seguridad",
-      "Línea de Crisis Local: 135\nEmergencias Médicas: 911\n\nPor favor, busca apoyo profesional de inmediato si sientes que no puedes mantenerte a salvo.",
-      [{ text: "Entendido", style: "cancel" }]
-    );
-  };
 
   const submitMood = async (moodValue: number) => {
     setSelectedMood(moodValue);
@@ -39,9 +32,7 @@ export default function HomeScreen() {
         {/* Header con botón de Emergencia */}
         <View style={styles.header}>
           <Text style={styles.logo}>Senda</Text>
-          <TouchableOpacity style={styles.helpButton} onPress={handleHelpButton}>
-            <Text style={styles.helpButtonText}>🆘 Necesito ayuda</Text>
-          </TouchableOpacity>
+          <HelpButton />
         </View>
 
         <Text style={styles.greeting}>Hola, ¿Cómo te sientes hoy?</Text>
@@ -121,15 +112,6 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   logo: { fontSize: 28, fontWeight: 'bold', color: '#1B4965' }, // Azul petróleo
-  helpButton: {
-    backgroundColor: '#FFE5E5',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFCCCC'
-  },
-  helpButtonText: { color: '#D80000', fontWeight: '600', fontSize: 13 },
   greeting: { fontSize: 24, fontWeight: '600', color: '#1B4965', marginBottom: 20 },
   
   moodContainer: {

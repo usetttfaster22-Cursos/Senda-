@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 
-import { apiFetch } from '@/lib/api';
+import { showHelpResources } from '@/components/help-button';
+import { ApiError, apiFetch } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -14,23 +15,36 @@ export default function ChatScreen() {
     { id: '1', role: 'assistant', content: 'Hola. Soy NOVA. ¿Qué te gustaría explorar hoy?' }
   ]);
   const [inputText, setInputText] = useState('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const sendMessage = async () => {
-    if (inputText.trim() === '') return;
+    if (inputText.trim() === '' || sending) return;
 
     const newUserMessage: Message = { id: Date.now().toString(), role: 'user', content: inputText.trim() };
     setMessages((prev) => [...prev, newUserMessage]);
     setInputText('');
+    setSending(true);
 
     try {
-      const data = await apiFetch<{ role: Message['role']; content: string }>('/api/chat/nova', {
+      const data = await apiFetch<{ sessionId: string; role: Message['role']; content: string; crisis: boolean }>('/api/chat/nova', {
         method: 'POST',
-        body: JSON.stringify({ message: newUserMessage.content })
+        body: JSON.stringify({ message: newUserMessage.content, sessionId })
       });
+      setSessionId(data.sessionId);
       setMessages((prev) => [...prev, { id: Date.now().toString(), role: data.role, content: data.content }]);
+      if (data.crisis) {
+        showHelpResources();
+      }
     } catch (error) {
       console.error(error);
-      setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Lo siento, en este momento no me puedo conectar con el servidor. Intenta de nuevo en unos minutos.' }]);
+      // 429 = límite diario; el servidor explica qué hacer.
+      const content = error instanceof ApiError && error.status === 429
+        ? error.message
+        : 'Lo siento, en este momento no me puedo conectar con el servidor. Intenta de nuevo en unos minutos.';
+      setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content }]);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -73,7 +87,7 @@ export default function ChatScreen() {
             onChangeText={setInputText}
             multiline
           />
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <TouchableOpacity style={[styles.sendButton, sending && { opacity: 0.5 }]} onPress={sendMessage} disabled={sending}>
             <Text style={styles.sendButtonText}>Enviar</Text>
           </TouchableOpacity>
         </View>

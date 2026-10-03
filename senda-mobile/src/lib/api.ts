@@ -4,6 +4,12 @@ import { supabase } from './supabase';
 // usa la IP local, por ejemplo EXPO_PUBLIC_API_URL=http://192.168.1.20:3000
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
 // Llama al backend de Senda enviando el token de la sesión actual.
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
@@ -19,7 +25,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   });
 
   if (!response.ok) {
-    throw new Error(`Error ${response.status} en ${path}`);
+    const body = await response.json().catch(() => null);
+    throw new ApiError(response.status, body?.error ?? `Error ${response.status} en ${path}`);
   }
   return response.json() as Promise<T>;
 }

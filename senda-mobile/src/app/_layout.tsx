@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 
+import { HelpButton } from '@/components/help-button';
 import { useSession } from '@/hooks/use-session';
 
 export default function RootLayout() {
@@ -31,7 +32,8 @@ export default function RootLayout() {
               title: 'NOVA', 
               presentation: 'modal', 
               headerStyle: { backgroundColor: '#FDFBF7' },
-              headerTintColor: '#1B4965'
+              headerTintColor: '#1B4965',
+              headerRight: () => <HelpButton compact />
             }} 
           />
           <Stack.Screen 
@@ -39,7 +41,8 @@ export default function RootLayout() {
             options={{ 
               title: 'Diario', 
               headerStyle: { backgroundColor: '#FDFBF7' },
-              headerTintColor: '#1B4965'
+              headerTintColor: '#1B4965',
+              headerRight: () => <HelpButton compact />
             }} 
           />
           <Stack.Screen 
@@ -47,7 +50,8 @@ export default function RootLayout() {
             options={{ 
               title: 'Aprender', 
               headerStyle: { backgroundColor: '#FDFBF7' },
-              headerTintColor: '#1B4965'
+              headerTintColor: '#1B4965',
+              headerRight: () => <HelpButton compact />
             }} 
           />
         </Stack.Protected>
