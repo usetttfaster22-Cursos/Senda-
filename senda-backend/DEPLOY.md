@@ -1,7 +1,7 @@
 # Despliegue en el servidor (Docker + Nginx)
 
 El backend corre en un contenedor que escucha solo en `127.0.0.1:8110`;
-Nginx lo publica con HTTPS en un subdominio (por ejemplo `api.TU-DOMINIO.com`).
+Nginx lo publica con HTTPS en un subdominio (por ejemplo `senda.useservices.company`).
 
 ## 1. Descargar el código
 
@@ -39,22 +39,22 @@ docker compose run --rm api npx prisma migrate resolve --applied 20261003000000_
 
 ## 5. Publicar con Nginx + HTTPS
 
-Primero crea un registro DNS tipo A de `api.TU-DOMINIO.com` apuntando a la IP del servidor.
+Primero crea un registro DNS tipo A de `senda.useservices.company` apuntando a la IP del servidor.
 
 ```bash
 cp deploy/nginx-senda.conf /etc/nginx/sites-available/senda
-nano /etc/nginx/sites-available/senda        # reemplaza api.TU-DOMINIO.com
+nano /etc/nginx/sites-available/senda        # reemplaza senda.useservices.company
 ln -s /etc/nginx/sites-available/senda /etc/nginx/sites-enabled/senda
 nginx -t && systemctl reload nginx
 
 # Certificado gratuito de Let's Encrypt (instala certbot si no lo tienes)
 apt install -y certbot python3-certbot-nginx
-certbot --nginx -d api.TU-DOMINIO.com
+certbot --nginx -d senda.useservices.company
 ```
 
-Prueba: `curl https://api.TU-DOMINIO.com/health`
+Prueba: `curl https://senda.useservices.company/health`
 
-En la app móvil, usa `EXPO_PUBLIC_API_URL=https://api.TU-DOMINIO.com`.
+En la app móvil, usa `EXPO_PUBLIC_API_URL=https://senda.useservices.company`.
 
 ## Actualizar
 
